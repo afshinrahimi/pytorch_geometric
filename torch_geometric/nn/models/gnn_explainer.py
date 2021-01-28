@@ -106,7 +106,12 @@ class GNNExplainer(torch.nn.Module):
             node_idx, self.num_hops, edge_index, relabel_nodes=True,
             num_nodes=num_nodes, flow=self.__flow__())
 
-        x = x[subset]
+        #sparse matrices can not currently be sliced/indexed in pytorch
+        if x.is_sparse:
+            x = torch.index_select(x, 0, subset).to_dense()
+        else:
+            x = x[subset]
+
         for key, item in kwargs.items():
             if torch.is_tensor(item) and item.size(0) == num_nodes:
                 item = item[subset]
